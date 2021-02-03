@@ -39,6 +39,12 @@
     path: /etc/nginx/sites-enabled/default
     state: absent
   notify: restart nginx
+- name: copy set core params
+  template:
+    src: templates/my.conf
+    dest: /etc/sysctl.d/10-custom.conf
+- name: apply core params
+  shell: /sbin/sysctl --system
 - name: Generate two ssh pair keys for root user
   openssh_keypair:
     path: "/root/.ssh/{{item}}"
