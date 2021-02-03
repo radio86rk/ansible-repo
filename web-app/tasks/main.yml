@@ -1,0 +1,51 @@
+---
+- name: Update repos
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Install utils
+  apt:
+    name: "{{item}}"
+    state: latest
+  with_items:
+   - nginx
+   - zsh
+   - wget
+- name: Clone repo from git
+  git:
+    repo: https://github.com/radio86rk/app.git
+    dest: /tmp/app/
+- name: Copy html file
+  copy:
+   src: /tmp/app/index.html
+   dest: /var/www/index.html
+   remote_src: yes
+- name: Copy config files
+  copy:
+   src: files/app.conf
+   dest: /etc/nginx/sites-available/app.conf
+   owner: root
+   group: root
+   mode: 0644
+- name: Create symlink for config file
+  file:
+    src: /etc/nginx/sites-available/app.conf
+    dest: /etc/nginx/sites-enabled/app.conf
+    state: link
+  notify: restart nginx
+- name: Unlink default config
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: restart nginx
+- name: Generate two ssh pair keys for root user
+  openssh_keypair:
+    path: "/root/.ssh/{{item}}"
+    type: rsa
+    size: 4096
+    state: present
+    force: no  
+  with_items:
+   - key_1
+   - key_2
